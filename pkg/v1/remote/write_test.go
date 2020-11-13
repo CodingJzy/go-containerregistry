@@ -546,7 +546,7 @@ func TestStreamBlob(t *testing.T) {
 		t.Fatalf("layer.Compressed: %v", err)
 	}
 
-	commitLocation, err := w.streamBlob(blob, streamLocation.String())
+	commitLocation, err := w.streamBlob(context.Background(), blob, streamLocation.String())
 	if err != nil {
 		t.Errorf("streamBlob() = %v", err)
 	}
@@ -598,7 +598,7 @@ func TestStreamLayer(t *testing.T) {
 		t.Fatalf("layer.Compressed: %v", err)
 	}
 
-	commitLocation, err := w.streamBlob(blob, streamLocation.String())
+	commitLocation, err := w.streamBlob(context.Background(), blob, streamLocation.String())
 	if err != nil {
 		t.Errorf("streamBlob: %v", err)
 	}
@@ -813,8 +813,8 @@ func TestCommitImage(t *testing.T) {
 	}
 	defer closer.Close()
 
-	if err := w.commitImage(img, w.repo.Tag("latest")); err != nil {
-		t.Errorf("commitImage() = %v", err)
+	if err := w.commitManifest(img, w.repo.Tag("latest")); err != nil {
+		t.Error("commitManifest() = ", err)
 	}
 }
 

@@ -87,6 +87,9 @@ func Get(ref name.Reference, options ...Option) (*Descriptor, error) {
 
 // Head returns a v1.Descriptor for the given reference by issuing a HEAD
 // request.
+//
+// Note that the server response will not have a body, so any errors encountered
+// should be retried with Get to get more details.
 func Head(ref name.Reference, options ...Option) (*v1.Descriptor, error) {
 	acceptable := []types.MediaType{
 		// Just to look at them.
@@ -348,14 +351,14 @@ func (f *fetcher) headManifest(ref name.Reference, acceptable []types.MediaType)
 	}, nil
 }
 
-func (f *fetcher) fetchBlob(h v1.Hash) (io.ReadCloser, error) {
+func (f *fetcher) fetchBlob(ctx context.Context, h v1.Hash) (io.ReadCloser, error) {
 	u := f.url("blobs", h.String())
 	req, err := http.NewRequest(http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := f.Client.Do(req.WithContext(f.context))
+	resp, err := f.Client.Do(req.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}

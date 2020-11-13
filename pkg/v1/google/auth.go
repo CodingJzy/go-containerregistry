@@ -53,7 +53,12 @@ func NewEnvAuthenticator() (authn.Authenticator, error) {
 		return nil, err
 	}
 
-	return &tokenSourceAuth{oauth2.ReuseTokenSource(nil, ts)}, nil
+	token, err := ts.Token()
+	if err != nil {
+		return nil, err
+	}
+
+	return &tokenSourceAuth{oauth2.ReuseTokenSource(token, ts)}, nil
 }
 
 // NewGcloudAuthenticator returns an oauth2.TokenSource that generates access
@@ -98,6 +103,11 @@ func NewTokenAuthenticator(serviceAccountJSON string, scope string) (authn.Authe
 	return &tokenSourceAuth{oauth2.ReuseTokenSource(nil, ts)}, nil
 }
 
+// NewTokenSourceAuthenticator converts an oauth2.TokenSource into an authn.Authenticator.
+func NewTokenSourceAuthenticator(ts oauth2.TokenSource) authn.Authenticator {
+	return &tokenSourceAuth{ts}
+}
+
 // tokenSourceAuth turns an oauth2.TokenSource into an authn.Authenticator.
 type tokenSourceAuth struct {
 	oauth2.TokenSource
@@ -108,13 +118,6 @@ func (tsa *tokenSourceAuth) Authorization() (*authn.AuthConfig, error) {
 	token, err := tsa.Token()
 	if err != nil {
 		return nil, err
-	}
-
-	if logs.Enabled(logs.Debug) {
-		b, err := json.Marshal(token)
-		if err == nil {
-			logs.Debug.Printf("google.Keychain: %s", string(b))
-		}
 	}
 
 	return &authn.AuthConfig{
